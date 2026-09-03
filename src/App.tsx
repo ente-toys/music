@@ -881,6 +881,37 @@ export default function Home() {
             <div className="settings-content">
               <section
                 className="settings-section"
+                aria-labelledby="skin-setting"
+              >
+                <div className="settings-section-heading">
+                  <span>
+                    <strong id="skin-setting">Player skin</strong>
+                    <small>Change the appearance of the player.</small>
+                  </span>
+                </div>
+                <label className="setting-label" htmlFor="skin-select">
+                  Skin
+                </label>
+                <select
+                  id="skin-select"
+                  className="preset-select"
+                  value={skin}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+                    if (value !== 'classic' && value !== 'aero') return;
+                    setSkin(value);
+                  }}
+                >
+                  {skins.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </section>
+
+              <section
+                className="settings-section"
                 aria-labelledby="visualizer-setting"
               >
                 <div className="settings-section-heading">
@@ -935,37 +966,6 @@ export default function Home() {
                     </select>
                   </div>
                 </div>
-              </section>
-
-              <section
-                className="settings-section"
-                aria-labelledby="skin-setting"
-              >
-                <div className="settings-section-heading">
-                  <span>
-                    <strong id="skin-setting">Player skin</strong>
-                    <small>Change the appearance of the player.</small>
-                  </span>
-                </div>
-                <label className="setting-label" htmlFor="skin-select">
-                  Skin
-                </label>
-                <select
-                  id="skin-select"
-                  className="preset-select"
-                  value={skin}
-                  onChange={(event) => {
-                    const value = event.currentTarget.value;
-                    if (value !== 'classic' && value !== 'aero') return;
-                    setSkin(value);
-                  }}
-                >
-                  {skins.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
               </section>
             </div>
           </section>
