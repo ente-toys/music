@@ -885,7 +885,7 @@ export default function Home() {
               >
                 <div className="settings-section-heading">
                   <span>
-                    <strong id="skin-setting">Player skin</strong>
+                    <strong id="skin-setting">Skin</strong>
                     <small>Change the appearance of the player.</small>
                   </span>
                 </div>
