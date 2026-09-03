@@ -146,7 +146,7 @@ button {
   width: 18px;
   height: 18px;
   place-items: center;
-  border: 1px solid #d3ff49;
+  border: 1px solid transparent;
   color: #d3ff49;
   font-size: 13px;
 }

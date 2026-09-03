@@ -16,8 +16,8 @@ const { tracks } = (await fetch('/tracks.json').then((response) =>
 const crossfadeSeconds = 0.1;
 const defaultVisualization = 'Flexi - alien fish pond';
 const skins = [
-  { value: 'classic', label: 'ENTE CLASSIC' },
-  { value: 'aero', label: 'FRUTIGER AERO' },
+  { value: 'classic', label: 'Classic' },
+  { value: 'aero', label: 'Aero' },
 ] as const;
 const visualizationIntervals = [
   [5, '5 seconds'],
@@ -134,7 +134,7 @@ export default function Home() {
   const [elapsed, setElapsed] = useState(restoreTimeRef.current);
   const [duration, setDuration] = useState(restoreTimeRef.current);
   const [volume, setVolume] = useState(savedState.volume ?? 72);
-  const [skin, setSkin] = useState<Skin>(savedState.skin ?? 'aero');
+  const [skin, setSkin] = useState<Skin>(savedState.skin ?? 'classic');
   const [looping, setLooping] = useState(savedState.looping ?? true);
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
   const [settingsOpen, setSettingsOpen] = useState(false);
