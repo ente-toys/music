@@ -19,6 +19,7 @@ const defaultVisualization = 'Flexi - alien fish pond';
 const skins = [
   { value: 'classic', label: 'Classic' },
   { value: 'metal', label: 'Metal' },
+  { value: 'dark-metal', label: 'Dark Metal' },
 ] as const;
 const visualizationIntervals = [
   [5, '5 seconds'],
@@ -170,7 +171,7 @@ export default function Home() {
   const [elapsed, setElapsed] = useState(restoreTimeRef.current);
   const [duration, setDuration] = useState(restoreTimeRef.current);
   const [volume, setVolume] = useState(savedState.volume ?? 72);
-  const [skin, setSkin] = useState<Skin>(savedState.skin === 'classic' ? 'classic' : 'metal');
+  const [skin, setSkin] = useState<Skin>(skins.find(({ value }) => value === savedState.skin)?.value ?? 'metal');
   const [looping, setLooping] = useState(savedState.looping ?? true);
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
   const [minimizing, setMinimizing] = useState(false);
@@ -638,7 +639,7 @@ export default function Home() {
 
   return (
     <main
-      className={`music-shell skin-${skin}`}
+      className={`music-shell skin-${skin}${skin === 'dark-metal' ? ' skin-metal' : ''}`}
       onPointerUp={doubleTapVisualizer}
       onClick={(event) => {
         if (!(event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls'))
@@ -691,7 +692,7 @@ export default function Home() {
             title="Drag to move · Double-click to center"
           >
             <img className="title-logo" src="/ente-music.svg" alt="Ente Music" draggable={false} />
-            {skin === 'metal' && <span className="hardware-label">STEREO MUSIC PLAYER</span>}
+            {skin !== 'classic' && <span className="hardware-label">STEREO MUSIC PLAYER</span>}
             <span className="window-actions">
               <button
                 type="button"
@@ -797,7 +798,7 @@ export default function Home() {
                 <p className="track-artist">{track.artist}</p>
               </div>
               <div className="clock">
-                {skin === 'metal' ? <SegmentClock seconds={elapsed} /> : formatTime(elapsed)}
+                {skin !== 'classic' ? <SegmentClock seconds={elapsed} /> : formatTime(elapsed)}
               </div>
               <div ref={meterRef} className="meter" aria-hidden="true">
                 {Array.from({ length: 18 }, (_, bar) => (
