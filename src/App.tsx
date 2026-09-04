@@ -17,7 +17,7 @@ const crossfadeSeconds = 0.1;
 const defaultVisualization = 'Flexi - alien fish pond';
 const skins = [
   { value: 'classic', label: 'Classic' },
-  { value: 'aero', label: 'Aero' },
+  { value: 'metal', label: 'Metal' },
 ] as const;
 const visualizationIntervals = [
   [5, '5 seconds'],
@@ -69,6 +69,28 @@ function formatTime(seconds: number) {
   return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60)
     .toString()
     .padStart(2, '0')}`;
+}
+
+function SegmentClock({ seconds }: { seconds: number }) {
+  const time = formatTime(seconds);
+  const segments = ['abcdef', 'bc', 'abdeg', 'abcdg', 'bcfg', 'acdfg', 'acdefg', 'abc', 'abcdefg', 'abcdfg'];
+  const paths = [
+    'M5 1h18l-4 4H9z', 'M24 2v20l-4-3V6z',
+    'M24 24v20l-4-4V27z', 'M5 45l4-4h10l4 4z',
+    'M4 24l4 3v13l-4 4z', 'M4 2l4 4v13l-4 3z',
+    'M5 23l4-3h10l4 3-4 3H9z',
+  ];
+  return (
+    <span className="segment-clock" role="img" aria-label={time}>
+      {[...time].map((digit, index) => (
+        <svg key={index} viewBox={digit === ':' ? '0 0 10 46' : '0 0 28 46'} aria-hidden="true">
+          {digit === ':' ? <path d="M3 15h4v4H3zm0 15h4v4H3z" /> : paths.map((path, segment) => (
+            <path key={segment} d={path} opacity={segments[Number(digit)].includes('abcdefg'[segment]) ? 1 : 0.07} />
+          ))}
+        </svg>
+      ))}
+    </span>
+  );
 }
 
 function sourceFor(track: Track) {
@@ -134,7 +156,7 @@ export default function Home() {
   const [elapsed, setElapsed] = useState(restoreTimeRef.current);
   const [duration, setDuration] = useState(restoreTimeRef.current);
   const [volume, setVolume] = useState(savedState.volume ?? 72);
-  const [skin, setSkin] = useState<Skin>(savedState.skin ?? 'classic');
+  const [skin, setSkin] = useState<Skin>(savedState.skin === 'classic' ? 'classic' : 'metal');
   const [looping, setLooping] = useState(savedState.looping ?? true);
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -616,8 +638,8 @@ export default function Home() {
             onDoubleClick={recenterPlayer}
             title="Drag to move · Double-click to center"
           >
-            <span className="title-mark">🎵</span>
-            <span>Ente Music{minimized ? ` · ${track.title}` : ''}</span>
+            <img className="title-logo" src="/ente-music.svg" alt="Ente Music" draggable={false} />
+            {skin === 'metal' && <span className="hardware-label">STEREO MUSIC PLAYER</span>}
             <span className="window-actions">
               <button
                 type="button"
@@ -726,7 +748,9 @@ export default function Home() {
                 <p className="track-title">{track.title}</p>
                 <p className="track-artist">{track.artist}</p>
               </div>
-              <div className="clock">{formatTime(elapsed)}</div>
+              <div className="clock">
+                {skin === 'metal' ? <SegmentClock seconds={elapsed} /> : formatTime(elapsed)}
+              </div>
               <div ref={meterRef} className="meter" aria-hidden="true">
                 {Array.from({ length: 18 }, (_, bar) => (
                   <i
@@ -896,11 +920,7 @@ export default function Home() {
                   id="skin-select"
                   className="preset-select"
                   value={skin}
-                  onChange={(event) => {
-                    const value = event.currentTarget.value;
-                    if (value !== 'classic' && value !== 'aero') return;
-                    setSkin(value);
-                  }}
+                  onChange={(event) => setSkin(event.currentTarget.value as Skin)}
                 >
                   {skins.map(({ value, label }) => (
                     <option key={value} value={value}>
