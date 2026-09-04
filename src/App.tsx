@@ -171,7 +171,7 @@ export default function Home() {
   const [elapsed, setElapsed] = useState(restoreTimeRef.current);
   const [duration, setDuration] = useState(restoreTimeRef.current);
   const [volume, setVolume] = useState(savedState.volume ?? 72);
-  const [skin, setSkin] = useState<Skin>(skins.find(({ value }) => value === savedState.skin)?.value ?? 'metal');
+  const [skin, setSkin] = useState<Skin>(skins.find(({ value }) => value === savedState.skin)?.value ?? 'classic');
   const [looping, setLooping] = useState(savedState.looping ?? true);
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
   const [minimizing, setMinimizing] = useState(false);
