@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 import type { Visualizer as MilkdropVisualizer } from 'butterchurn';
 
 type Track = { id: string; title: string; artist: string; url: string };
@@ -36,7 +37,7 @@ const iconPaths = {
   pause: 'M8 5v14M16 5v14',
   play: 'M8 5l11 7-11 7z',
   previous: 'M6 5v14M19 6l-9 6 9 6z',
-  restore: 'M6 6h12v12H6z',
+  restore: 'M14 3h7v7m0-7L11 13M10 5H5v14h14v-5',
   settings:
     'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
 } as const;
@@ -61,6 +62,19 @@ function Icon({ name }: { name: keyof typeof iconPaths }) {
     <svg className="button-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d={iconPaths[name]} />
     </svg>
+  );
+}
+
+function SubmissionButton() {
+  return (
+    <a
+      className="submission-button"
+      href="mailto:music@ente.com?subject=Submission%20to%20music.ente.com"
+      aria-label="Submit your song by email"
+      title="Submit your song"
+    >
+      <span>Submit your song</span>
+    </a>
   );
 }
 
@@ -159,6 +173,7 @@ export default function Home() {
   const [skin, setSkin] = useState<Skin>(savedState.skin === 'classic' ? 'classic' : 'metal');
   const [looping, setLooping] = useState(savedState.looping ?? true);
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
+  const [minimizing, setMinimizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const track = tracks[index];
 
@@ -369,7 +384,7 @@ export default function Home() {
     event: ReactPointerEvent<HTMLDivElement>,
     target: HTMLElement,
   ) => {
-    if (event.button !== 0 || (event.target as Element).closest('button'))
+    if (event.button !== 0 || (event.target as Element).closest('button, a'))
       return;
     const bounds = target.getBoundingClientRect();
     dragRef.current = {
@@ -403,12 +418,31 @@ export default function Home() {
   };
 
   const recenterPlayer = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if ((event.target as Element).closest('button')) return;
+    if ((event.target as Element).closest('button, a')) return;
     const player = playerRef.current!;
     player.style.left = '50%';
     player.style.top = '50%';
     player.style.transform = 'translate(-50%, -50%)';
     localStorage.removeItem('ente-player-position');
+  };
+
+  const minimizePlayer = async () => {
+    if (minimized || minimizing) return;
+    setSettingsOpen(false);
+    setMinimizing(true);
+    let animation: Animation | undefined;
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      animation = playerRef.current!.firstElementChild!.animate(
+        [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(32px) scale(0.94)' }],
+        { duration: 180, easing: 'ease-in', fill: 'forwards' },
+      );
+      await animation.finished;
+    }
+    flushSync(() => {
+      setMinimized(true);
+      setMinimizing(false);
+    });
+    animation?.cancel();
   };
 
   const toggleFullscreen = () =>
@@ -419,7 +453,7 @@ export default function Home() {
   const doubleTapVisualizer = (event: ReactPointerEvent<HTMLElement>) => {
     if (
       event.pointerType === 'mouse' ||
-      (event.target as Element).closest('.player-wrap, .settings-backdrop')
+      (event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls')
     )
       return;
     const now = performance.now();
@@ -606,6 +640,10 @@ export default function Home() {
     <main
       className={`music-shell skin-${skin}`}
       onPointerUp={doubleTapVisualizer}
+      onClick={(event) => {
+        if (!(event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls'))
+          void minimizePlayer();
+      }}
       onDoubleClick={(event) => {
         if (
           !(
@@ -613,7 +651,7 @@ export default function Home() {
             performance.now() - lastVisualizerTapRef.current < 500
           ) &&
           !(event.target as Element).closest(
-            '.player-wrap, .settings-backdrop',
+            '.player-wrap, .settings-backdrop, .visualizer-controls',
           )
         )
           toggleFullscreen();
@@ -622,6 +660,20 @@ export default function Home() {
       <canvas ref={canvasRef} className="visualizer" aria-hidden="true" />
       <div className="scanlines" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
+      <div className="visualizer-controls">
+        <span title={visualization}>{visualization}</span>
+        <button
+          type="button"
+          aria-label="Next visualization"
+          title="Next visualization"
+          disabled={!visualizerReady || visualizations.length < 2}
+          onClick={() => setVisualization((current) =>
+            visualizations[(visualizations.indexOf(current) + 1) % visualizations.length],
+          )}
+        >
+          <Icon name="next" />
+        </button>
+      </div>
 
       <section
         ref={playerRef}
@@ -655,10 +707,7 @@ export default function Home() {
                 type="button"
                 className="window-button"
                 aria-label={minimized ? 'Restore player' : 'Minimize player'}
-                onClick={() => {
-                  setSettingsOpen(false);
-                  setMinimized((value) => !value);
-                }}
+                onClick={() => void minimizePlayer()}
               >
                 <Icon name={minimized ? 'restore' : 'minimize'} />
               </button>
@@ -689,7 +738,6 @@ export default function Home() {
                 onKeyUp={() => (seekingRef.current = false)}
                 onBlur={() => (seekingRef.current = false)}
               />
-              <span>-{formatTime(Math.max(0, duration - elapsed))}</span>
             </div>
             <button
               type="button"
@@ -776,7 +824,6 @@ export default function Home() {
                 onKeyUp={() => (seekingRef.current = false)}
                 onBlur={() => (seekingRef.current = false)}
               />
-              <span>-{formatTime(Math.max(0, duration - elapsed))}</span>
             </div>
 
             <div className="transport-row">
@@ -868,6 +915,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <div className="visualizer-controls submission-controls">
+        <SubmissionButton />
+      </div>
 
       {settingsOpen && (
         <div
