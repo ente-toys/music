@@ -53,6 +53,7 @@ type SavedState = {
   minimized: boolean;
   visualization: string;
   visualizationInterval: VisualizationInterval;
+  visualizerPaused: boolean;
 };
 const savedState = JSON.parse(
   localStorage.getItem('ente-player-state') ?? '{}',
@@ -168,6 +169,7 @@ export default function Home() {
   );
   const [visualizationInterval, setVisualizationInterval] =
     useState<VisualizationInterval>(savedState.visualizationInterval ?? 15);
+  const [visualizerPaused, setVisualizerPaused] = useState(savedState.visualizerPaused ?? false);
   const [elapsed, setElapsed] = useState(restoreTimeRef.current);
   const [duration, setDuration] = useState(restoreTimeRef.current);
   const [volume, setVolume] = useState(savedState.volume ?? 72);
@@ -205,6 +207,7 @@ export default function Home() {
         minimized,
         visualization,
         visualizationInterval,
+        visualizerPaused,
       } satisfies SavedState),
     );
   }, [
@@ -216,6 +219,7 @@ export default function Home() {
     minimized,
     visualization,
     visualizationInterval,
+    visualizerPaused,
   ]);
 
   const connectAudio = useCallback(async (resume = true) => {
@@ -329,7 +333,9 @@ export default function Home() {
       const target = live ? level / activeBins / 255 : 0;
       pulse += (target - pulse) * (target > pulse ? 0.45 : 0.12);
       const canvas = canvasRef.current!;
-      canvas.style.filter = `brightness(${0.9 + pulse * 3.2}) saturate(${1 + pulse * 2.4})`;
+      canvas.style.filter = live
+        ? `brightness(${0.9 + pulse * 3.2}) saturate(${1 + pulse * 2.4})`
+        : 'brightness(0.55) saturate(0.65) blur(1.5px)';
       canvas.style.transform = `scale(${1 + pulse * 0.1})`;
       bars.forEach((bar, index) => {
         const bucket = Math.floor(
@@ -337,7 +343,7 @@ export default function Home() {
         );
         bar.style.height = `${live ? Math.max(12, (frequencies[bucket] / 255) * 100) : 12}%`;
       });
-      visualizerRef.current?.render();
+      if (!visualizerPaused) visualizerRef.current?.render();
       frame = requestAnimationFrame(render);
     };
     resize();
@@ -347,7 +353,7 @@ export default function Home() {
       removeEventListener('resize', resize);
       cancelAnimationFrame(frame);
     };
-  }, [visualizerReady]);
+  }, [visualizerPaused, visualizerReady]);
 
   useEffect(() => {
     if (!visualizerReady) return;
@@ -364,6 +370,7 @@ export default function Home() {
   useEffect(() => {
     if (
       !visualizerReady ||
+      visualizerPaused ||
       !visualizationInterval ||
       visualizations.length < 2
     )
@@ -379,7 +386,7 @@ export default function Home() {
       visualizationInterval * 1000,
     );
     return () => clearTimeout(timer);
-  }, [visualization, visualizationInterval, visualizations, visualizerReady]);
+  }, [visualization, visualizationInterval, visualizations, visualizerPaused, visualizerReady]);
 
   const startDrag = (
     event: ReactPointerEvent<HTMLDivElement>,
@@ -663,6 +670,16 @@ export default function Home() {
       <div className="vignette" aria-hidden="true" />
       <div className="visualizer-controls">
         <span title={visualization}>{visualization}</span>
+        <button
+          type="button"
+          aria-label={visualizerPaused ? 'Resume visualization' : 'Pause visualization'}
+          aria-pressed={visualizerPaused}
+          title={visualizerPaused ? 'Resume visualization' : 'Pause visualization'}
+          disabled={!visualizerReady}
+          onClick={() => setVisualizerPaused((paused) => !paused)}
+        >
+          <Icon name={visualizerPaused ? 'play' : 'pause'} />
+        </button>
         <button
           type="button"
           aria-label="Next visualization"
