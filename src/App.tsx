@@ -16,6 +16,43 @@ const { tracks } = (await fetch('/tracks.json').then((response) =>
 )) as { tracks: Track[] };
 const crossfadeSeconds = 0.1;
 const defaultVisualization = 'Flexi - alien fish pond';
+const harshVisualizations = new Set([
+  'Adam Eatit Mashup FX 2 martin - disco mix + Lodus + Geiss + Ludicrous speed + Aderrasi 2_1',
+  'Adam Eatit Mashup FX 2 martin - disco mix + Lodus + Geiss + Ludicrous speed + Baked Ft another AdamFX Mashup 7_1',
+  'Adam Eatit Mashup FX 2 martin - disco mix + Lodus + Geiss + Ludicrous speed + Eos Ft Flexi n Hexocollie + Baked + Santa Fucking Claus',
+  'Aderrasi - Contortion (Escher′s Tunnel Mix)',
+  'Aderrasi - Contortion (Wide Twist Mix)',
+  'Aderrasi - Mother Of Pearl - mash0000 - how to piss off your eyes',
+  'Cope - The Neverending Explosion of Red Liquid Fire',
+  'Eo.S. + Geiss - glowsticks v2 02 (Relief Mix)',
+  'Eo.S. + flexi - glowsticks v2 05 and proton lights (+Krash′s beat code) _Phat_remix02b + illumination (Stahl′s Mix)',
+  'Eo.S. - glowsticks v2 03 music',
+  'Eo.S. - glowsticks v2 05 and proton lights (+Krash′s beat code) _Phat_remix02b',
+  'Eo.S. - glowsticks v2 05 and proton lights (+Krash′s beat code) _Phat_remix07 recursive demons',
+  'Flexi + Martin - tunnel of supraschismatika',
+  'Flexi - reality tunnel',
+  'Flexi, Martin, Phat, Zylot + Eo.S - one way trip trap proof of concept [epileptic zoom tunnel edit]',
+  'Geiss - 3 layers (Tunnel Mix)',
+  'GreatWho - Lasershow',
+  'Idiot - Marphets Surreal Dream (Hypnotic Spiral Mix)',
+  'Rovastar + Geiss - Hyperspace - kaleidoscope',
+  'Rovastar - Explosive Minds',
+  'Rovastar - Hyperspace',
+  'Studio Music and Unchained - Rapid Alteration',
+  'TEcHNO & SandStorm - Psychodelic Highway',
+  '_Geiss - Explosion Mod 2b',
+  'adam eatit fx 2 martin - disco mix, lodus, geiss, ludicrous speed,flexi, aderrasi n hexcollie',
+  'amandio c - flashy thing',
+  'baked - Chinese Fingerbang (cao ni ma =]) - PieturP colors - Bitcore speed tweak',
+  'flexi - hyperspaceflight (bn cn Jelly 4)',
+  'martin - cope - laser dome',
+  'martin - into the fireworks',
+  'martin - ludicrous speed',
+  'martin - mandelbox explorer - high speed demo version',
+  'martin - tunnel race',
+  'martin - violet flash',
+  'phat + Eo.S. - Bass_responce_Red_Movements_Disorienting nebula3',
+]);
 const skins = [
   { value: 'classic', label: 'Classic' },
   { value: 'metal', label: 'Metal' },
@@ -267,6 +304,7 @@ export default function Home() {
             {},
             ...presetPacks.map(({ default: pack }) => pack.getPresets()),
           );
+          for (const name of harshVisualizations) delete presets[name];
           presetsRef.current = presets;
           setVisualizations(Object.keys(presets).sort());
           const initialVisualization = presets[initialVisualizationRef.current]
