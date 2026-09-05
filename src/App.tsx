@@ -19,7 +19,6 @@ const defaultVisualization = 'Flexi - alien fish pond';
 const skins = [
   { value: 'classic', label: 'Classic' },
   { value: 'metal', label: 'Metal' },
-  { value: 'dark-metal', label: 'Dark Metal' },
 ] as const;
 const visualizationIntervals = [
   [5, '5 seconds'],
@@ -646,7 +645,7 @@ export default function Home() {
 
   return (
     <main
-      className={`music-shell skin-${skin}${skin === 'dark-metal' ? ' skin-metal' : ''}`}
+      className={`music-shell skin-${skin}`}
       onPointerUp={doubleTapVisualizer}
       onClick={(event) => {
         if (!(event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls'))
