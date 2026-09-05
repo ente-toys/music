@@ -355,7 +355,6 @@ export default function Home() {
     const bars = Array.from(meterRef.current!.children) as HTMLElement[];
     const frequencies = new Uint8Array(analyser.frequencyBinCount);
     let frame = 0;
-    let pulse = 0;
     const resize = () =>
       visualizerRef.current?.setRendererSize(innerWidth, innerHeight, {
         pixelRatio: Math.min(devicePixelRatio, 2),
@@ -364,16 +363,10 @@ export default function Home() {
       analyser.getByteFrequencyData(frequencies);
       const live = playingRef.current;
       const activeBins = frequencies.length / 2;
-      let level = 0;
-      for (let index = 0; index < activeBins; index++)
-        level += frequencies[index];
-      const target = live ? level / activeBins / 255 : 0;
-      pulse += (target - pulse) * (target > pulse ? 0.45 : 0.12);
       const canvas = canvasRef.current!;
       canvas.style.filter = live
-        ? `brightness(${0.9 + pulse * 3.2}) saturate(${1 + pulse * 2.4})`
+        ? 'brightness(0.75) saturate(0.8) contrast(0.9)'
         : 'brightness(0.55) saturate(0.65) blur(1.5px)';
-      canvas.style.transform = `scale(${1 + pulse * 0.1})`;
       bars.forEach((bar, index) => {
         const bucket = Math.floor(
           ((index + 1) / bars.length) ** 2 * (activeBins - 1),

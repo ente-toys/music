@@ -63,8 +63,8 @@ button {
 .visualizer {
   z-index: 2;
   pointer-events: none;
-  transition: filter 800ms ease, transform 800ms ease;
-  will-change: filter, transform;
+  transition: filter 800ms ease;
+  will-change: filter;
 }
 .scanlines,
 .vignette {
