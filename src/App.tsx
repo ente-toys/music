@@ -15,7 +15,41 @@ const { tracks } = (await fetch('/tracks.json').then((response) =>
   response.json(),
 )) as { tracks: Track[] };
 const crossfadeSeconds = 0.1;
-const defaultVisualization = 'Flexi - alien fish pond';
+const featuredVisualizations = [
+  'baked - mushroom rainbows[acid Storm]',
+  'Rozzor & Shreyas - Deeper Aesthetics',
+  'cope + martin - mother-of-pearl',
+  'Flexi + Martin - cascading decay swing',
+  'Rovastar - Torrid Tales',
+  'Rovastar - Oozing Resistance',
+  'suksma - vector exp 1 - couldn′t not',
+  'Aderrasi - Songflower (Moss Posy)',
+  'Flexi + stahlregen - jelly showoff parade',
+  'flexi + fishbrain - neon mindblob grafitti',
+  '_Mig_009',
+  'Flexi - psychenapping',
+  'flexi - alien canvas [learning]',
+  'ORB - Blue Emotion',
+  'TonyMilkdrop - Magellan\'s Nebula [Flexi - fancy + $this shall not retain]',
+  'Flexi - truly soft piece of software - this is generic texturing (Jelly) ',
+  'Flexi, martin + geiss - dedicated to the sherwin maxawow',
+  'Flexi - alien fish pond',
+  'flexi - Mindblob',
+  'Aderrasi - Airhandler (Last Breath - Calm)',
+  'Eo.S. + Zylot - skylight (Stained Glass Majesty mix)',
+  'cope - digital sea',
+  'Martin - liquid arrows',
+  'ORB - Pastel Primer',
+  'Geiss - Reaction Diffusion 3 (Lichen Mix)',
+  'shifter - feathers (angel wings)',
+  'ORB - Planetary Alignment Acid Burn',
+  'flexi + bdrv - acid etching (jelly v5.5)',
+  'Geiss - Color Pox (Acid Impression Mix) (color saturation remix)',
+  'Flexi - smashing fractals [acid etching mix]',
+  'Martin - acid wiring',
+  'Rovastar & Idiot24-7 - Balk Acid',
+] as const;
+const defaultVisualization: string = featuredVisualizations[0];
 const harshVisualizations = new Set([
   'Adam Eatit Mashup FX 2 martin - disco mix + Lodus + Geiss + Ludicrous speed + Aderrasi 2_1',
   'Adam Eatit Mashup FX 2 martin - disco mix + Lodus + Geiss + Ludicrous speed + Baked Ft another AdamFX Mashup 7_1',
@@ -33,6 +67,9 @@ const harshVisualizations = new Set([
   'Flexi - reality tunnel',
   'Flexi, Martin, Phat, Zylot + Eo.S - one way trip trap proof of concept [epileptic zoom tunnel edit]',
   'Geiss - 3 layers (Tunnel Mix)',
+  'Geiss - Reaction Diffusion (Relief Mix)',
+  'Geiss - Reaction Diffusion 2',
+  'Geiss - Reaction Diffusion 3',
   'GreatWho - Lasershow',
   'Idiot - Marphets Surreal Dream (Hypnotic Spiral Mix)',
   'Rovastar + Geiss - Hyperspace - kaleidoscope',
@@ -306,7 +343,12 @@ export default function Home() {
           );
           for (const name of harshVisualizations) delete presets[name];
           presetsRef.current = presets;
-          setVisualizations(Object.keys(presets).sort());
+          setVisualizations([
+            ...featuredVisualizations,
+            ...Object.keys(presets)
+              .filter((name) => !featuredVisualizations.some((featured) => featured === name))
+              .sort(),
+          ]);
           const initialVisualization = presets[initialVisualizationRef.current]
             ? initialVisualizationRef.current
             : defaultVisualization;
