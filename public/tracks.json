@@ -3,7 +3,7 @@
     {
       "id": "then-1788427097",
       "title": "Then",
-      "artist": "Vishnu Mohandas",
+      "artist": "Vishnu",
       "url": "https://music.ente.com/tracks/then.mp3"
     },
     {
@@ -13,9 +13,15 @@
       "url": "https://music.ente.com/tracks/home.mp3"
     },
     {
+      "id": "love-1788679083",
+      "title": "Love",
+      "artist": "Vishnu",
+      "url": "https://music.ente.com/tracks/love.mp3"
+    },
+    {
       "id": "sunday-1788427097",
       "title": "Sunday",
-      "artist": "Vishnu Mohandas",
+      "artist": "Vishnu",
       "url": "https://music.ente.com/tracks/sunday.mp3"
     }
   ]
