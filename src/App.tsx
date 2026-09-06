@@ -11,7 +11,7 @@ import { flushSync } from 'react-dom';
 import type { Visualizer as MilkdropVisualizer } from 'butterchurn';
 
 type Track = { id: string; title: string; artist: string; url: string };
-const { tracks } = (await fetch('/tracks.json').then((response) =>
+const { tracks } = (await fetch('/player-tracks.json').then((response) =>
   response.json(),
 )) as { tracks: Track[] };
 const crossfadeSeconds = 0.1;
