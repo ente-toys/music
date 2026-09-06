@@ -222,6 +222,7 @@ export default function Home() {
   );
   const lastVisualizerTapRef = useRef(0);
   const playerRef = useRef<HTMLElement>(null);
+  const playlistRef = useRef<HTMLOListElement>(null);
   const settingsRef = useRef<HTMLElement>(null);
   const presetsRef = useRef<Record<string, unknown>>({});
   const presetLoadedRef = useRef(false);
@@ -267,6 +268,14 @@ export default function Home() {
     );
     return () => cancelAnimationFrame(frame);
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (skin !== 'metal') return;
+    const list = playlistRef.current!;
+    const active = list.querySelector<HTMLElement>('.active')!;
+    list.scrollTop =
+      active.offsetTop - list.clientHeight / 2 + active.offsetHeight / 2;
+  }, [index, skin]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -858,18 +867,6 @@ export default function Home() {
             </button>
             <button
               type="button"
-              className={`machine-button loop-button ${looping ? 'is-active' : ''}`}
-              aria-label={
-                looping ? 'Turn off track loop' : 'Loop current track'
-              }
-              aria-pressed={looping}
-              title={looping ? 'Looping current track' : 'Loop current track'}
-              onClick={toggleLoop}
-            >
-              <Icon name="loop" />
-            </button>
-            <button
-              type="button"
               className="machine-button"
               aria-label="Restore player"
               title="Restore player"
@@ -987,7 +984,7 @@ export default function Home() {
                 <span>PLAYLIST</span>
                 <span>{tracks.length} TRACKS</span>
               </div>
-              <ol>
+              <ol ref={playlistRef}>
                 {tracks.map((item, itemIndex) => (
                   <li key={item.id}>
                     <button
