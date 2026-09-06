@@ -616,17 +616,7 @@ export default function Home() {
     }
   };
 
-  const selectTrack = (next: number) => {
-    if (playingRef.current) return void crossfadeTo(next);
-    const audio = activeAudioRef.current
-      ? audioBRef.current!
-      : audioARef.current!;
-    audio.src = sourceFor(tracks[next]);
-    audio.load();
-    setIndex(next);
-    setElapsed(0);
-    setDuration(0);
-  };
+  const selectTrack = (next: number) => void crossfadeTo(next);
   const step = (direction: number) =>
     selectTrack((index + direction + tracks.length) % tracks.length);
 
@@ -687,6 +677,18 @@ export default function Home() {
           return;
         event.preventDefault();
         if (!event.repeat) void togglePlayback();
+        return;
+      }
+      const trackNumber = /^[1-9]$/.test(event.key) ? Number(event.key) : 0;
+      if (trackNumber && trackNumber <= tracks.length) {
+        if (
+          target?.closest(
+            'input, textarea, [role="slider"], [role="combobox"]',
+          )
+        )
+          return;
+        event.preventDefault();
+        if (!event.repeat) selectTrack(trackNumber - 1);
         return;
       }
       if (
