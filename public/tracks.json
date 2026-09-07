@@ -19,16 +19,16 @@
       "url": "https://music.ente.com/tracks/love-reprise.mp3"
     },
     {
-      "id": "sunday-1788427097",
-      "title": "Sunday",
-      "artist": "Vishnu",
-      "url": "https://music.ente.com/tracks/sunday.mp3"
-    },
-    {
       "id": "home-1788427097",
       "title": "Home",
       "artist": "aspizu",
       "url": "https://music.ente.com/tracks/home.mp3"
+    },
+    {
+      "id": "sunday-1788427097",
+      "title": "Sunday",
+      "artist": "Vishnu",
+      "url": "https://music.ente.com/tracks/sunday.mp3"
     }
   ]
 }
