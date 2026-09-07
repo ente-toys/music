@@ -146,6 +146,7 @@ function SubmissionButton() {
     <a
       className="submission-button"
       href="https://github.com/ente-toys/music#submit-your-song"
+      target="_blank"
       aria-label="Read how to submit your song"
       title="Submit your song"
     >
