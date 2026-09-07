@@ -729,7 +729,7 @@ export default function Home() {
 
   return (
     <main
-      className={`music-shell skin-${skin}`}
+      className={`music-shell skin-${skin} ${visualizerPaused ? 'visualizer-paused' : ''}`}
       onPointerUp={doubleTapVisualizer}
       onClick={(event) => {
         if (!(event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls'))
@@ -752,7 +752,6 @@ export default function Home() {
       <div className="scanlines" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
       <div className="visualizer-controls">
-        <span title={visualization}>{visualization}</span>
         <button
           type="button"
           aria-label={visualizerPaused ? 'Resume visualization' : 'Pause visualization'}

@@ -63,9 +63,10 @@ button {
 .visualizer {
   z-index: 2;
   pointer-events: none;
-  transition: filter 800ms ease;
-  will-change: filter;
+  transition: filter 800ms ease, opacity 800ms ease;
+  will-change: filter, opacity;
 }
+.visualizer-paused .visualizer { opacity: 0; }
 .scanlines,
 .vignette {
   pointer-events: none;
@@ -107,7 +108,6 @@ button {
 }
 .visualizer-controls:hover,
 .visualizer-controls:focus-within { opacity: 1; }
-.visualizer-controls span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .visualizer-controls button {
   width: 32px;
   height: 32px;
