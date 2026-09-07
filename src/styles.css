@@ -120,20 +120,6 @@ button {
 .visualizer-controls button:hover { background: #ffffff26; }
 .visualizer-controls button:disabled { opacity: 0.35; cursor: default; }
 .visualizer-controls button:focus-visible { outline: 1px solid #fff; outline-offset: 3px; }
-.submission-controls {
-  top: auto;
-  bottom: max(12px, env(safe-area-inset-bottom));
-}
-.submission-button {
-  display: flex;
-  align-items: center;
-  color: inherit;
-  text-decoration: none;
-}
-.submission-button:focus-visible { outline: 1px solid #fff; outline-offset: 3px; }
-.player-wrap.is-minimized ~ .submission-controls { bottom: calc(76px + env(safe-area-inset-bottom)); }
-:fullscreen .player-wrap.is-minimized ~ .submission-controls { bottom: max(12px, env(safe-area-inset-bottom)); }
-
 .player-wrap {
   position: absolute;
   z-index: 5;
@@ -183,6 +169,14 @@ button {
 .skin-classic .title-logo {
   width: 100.8px;
   height: 22.4px;
+}
+.skin-classic .player-window:not(.is-minimized) {
+  max-height: calc(100dvh - 20px);
+  overflow: auto;
+}
+.skin-classic .player-window:not(.is-minimized) .embedded-playlist ol {
+  height: 233px;
+  overflow-y: auto;
 }
 .window-button {
   width: 32px;
@@ -623,6 +617,33 @@ button {
   color: #89958c;
   font-size: 9px;
 }
+.embedded-playlist .submission-item {
+  padding: 4px;
+}
+.embedded-playlist .submission-button {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #ff642e;
+  color: #ff7a45;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.embedded-playlist .submission-button .button-icon {
+  width: 16px;
+  height: 16px;
+}
+.embedded-playlist .submission-button:hover {
+  background: #ff642e;
+  color: #fff;
+}
+.embedded-playlist .submission-button:focus-visible {
+  outline: 2px solid #ff8b61;
+  outline-offset: 2px;
+}
 
 .skin-metal {
   font-family: var(--font-geist-sans), sans-serif;
@@ -816,6 +837,25 @@ button {
 .skin-metal .embedded-playlist small { color: #747a76; }
 .skin-metal .embedded-playlist .active small { color: #a5afa8; }
 .skin-metal .embedded-playlist li button:hover { background: #ffffff0d; color: #fff; }
+.skin-metal .embedded-playlist .submission-item { padding: 6px 5px 8px; }
+.skin-metal .embedded-playlist .submission-button {
+  min-height: 40px;
+  border-color: #347e06;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #87df50, #4fc208 55%, #3b9106);
+  color: #fff;
+  box-shadow: var(--hardware-shadow);
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.skin-metal .embedded-playlist .submission-button:hover {
+  background: linear-gradient(135deg, #87df50, #4fc208 55%, #3b9106);
+  filter: brightness(1.1);
+}
+.skin-metal .embedded-playlist .submission-button:focus-visible { outline-color: #398b07; }
 .skin-metal .machine-button:hover,
 .skin-metal .window-button:hover { filter: brightness(1.1); }
 .skin-metal .machine-button:active,

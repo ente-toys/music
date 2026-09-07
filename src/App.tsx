@@ -114,6 +114,7 @@ const iconPaths = {
   restore: 'M14 3h7v7m0-7L11 13M10 5H5v14h14v-5',
   settings:
     'M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2zM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+  upload: 'M12 16V4m0 0L7 9m5-5 5 5M5 14v6h14v-6',
 } as const;
 type Skin = (typeof skins)[number]['value'];
 type VisualizationInterval = (typeof visualizationIntervals)[number][0];
@@ -144,10 +145,11 @@ function SubmissionButton() {
   return (
     <a
       className="submission-button"
-      href="mailto:music@ente.com?subject=Submission%20to%20music.ente.com"
-      aria-label="Submit your song by email"
+      href="https://github.com/ente-toys/music#submit-your-song"
+      aria-label="Read how to submit your song"
       title="Submit your song"
     >
+      <Icon name="upload" />
       <span>Submit your song</span>
     </a>
   );
@@ -191,13 +193,26 @@ function sliderStyle(value: number, max: number) {
   return { '--progress': `${(value / max) * 100}%` } as CSSProperties;
 }
 
+function centerElement(element: HTMLElement) {
+  element.style.left = '50%';
+  element.style.top = '50%';
+  element.style.transform = 'translate(-50%, -50%)';
+}
+
 function restorePosition(element: HTMLElement, key: string) {
   const position = localStorage.getItem(key);
-  if (!position) return;
+  if (!position) return centerElement(element);
   const [left, top] = position.split(',').map(Number);
-  if (!Number.isFinite(left) || !Number.isFinite(top)) return;
-  element.style.left = `${Math.min(left, Math.max(0, innerWidth - element.offsetWidth))}px`;
-  element.style.top = `${Math.min(top, Math.max(0, innerHeight - element.offsetHeight))}px`;
+  if (
+    !Number.isFinite(left) ||
+    !Number.isFinite(top) ||
+    left < 0 ||
+    top < 0 ||
+    left + element.offsetWidth > innerWidth ||
+    top + element.offsetHeight > innerHeight
+  ) return centerElement(element);
+  element.style.left = `${left}px`;
+  element.style.top = `${top}px`;
   element.style.transform = 'none';
 }
 
@@ -273,8 +288,11 @@ export default function Home() {
     if (skin !== 'metal') return;
     const list = playlistRef.current!;
     const active = list.querySelector<HTMLElement>('.active')!;
-    list.scrollTop =
-      active.offsetTop - list.clientHeight / 2 + active.offsetHeight / 2;
+    const top =
+      active.getBoundingClientRect().top -
+      list.getBoundingClientRect().top +
+      list.scrollTop;
+    list.scrollTop = top - (list.clientHeight - active.offsetHeight) / 2;
   }, [index, skin]);
 
   useEffect(() => {
@@ -508,10 +526,7 @@ export default function Home() {
 
   const recenterPlayer = (event: ReactMouseEvent<HTMLDivElement>) => {
     if ((event.target as Element).closest('button, a')) return;
-    const player = playerRef.current!;
-    player.style.left = '50%';
-    player.style.top = '50%';
-    player.style.transform = 'translate(-50%, -50%)';
+    centerElement(playerRef.current!);
     localStorage.removeItem('ente-player-position');
   };
 
@@ -998,15 +1013,14 @@ export default function Home() {
                     </button>
                   </li>
                 ))}
+                <li className="submission-item">
+                  <SubmissionButton />
+                </li>
               </ol>
             </div>
           </div>
         </div>
       </section>
-
-      <div className="visualizer-controls submission-controls">
-        <SubmissionButton />
-      </div>
 
       {settingsOpen && (
         <div
