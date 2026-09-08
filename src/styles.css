@@ -108,6 +108,12 @@ button {
 }
 .visualizer-controls:hover,
 .visualizer-controls:focus-within { opacity: 1; }
+.visualization-name {
+  max-width: min(280px, calc(100vw - 130px));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .visualizer-controls button {
   width: 32px;
   height: 32px;
@@ -120,6 +126,32 @@ button {
 .visualizer-controls button:hover { background: #ffffff26; }
 .visualizer-controls button:disabled { opacity: 0.35; cursor: default; }
 .visualizer-controls button:focus-visible { outline: 1px solid #fff; outline-offset: 3px; }
+.submission-footer {
+  position: absolute;
+  z-index: 5;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 10px;
+  text-decoration: none;
+  text-shadow: 0 1px 4px #000;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 180ms ease, visibility 0s linear 180ms;
+}
+.submission-footer.is-visible {
+  opacity: 0.55;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+.submission-footer.is-visible:hover,
+.submission-footer.is-visible:focus-visible { opacity: 1; }
+.submission-footer .button-icon { width: 13px; height: 13px; }
 .player-wrap {
   position: absolute;
   z-index: 5;
@@ -268,6 +300,14 @@ button {
 .mini-track span {
   color: #bac5bc;
   font-variant-numeric: tabular-nums;
+}
+.mini-submission-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border-color: #ff642e;
+  color: #ff7a45;
+  text-decoration: none;
 }
 .player-body {
   padding: 14px;
@@ -576,6 +616,7 @@ button {
 .embedded-playlist ol {
   margin: 0;
   padding: 4px;
+  scrollbar-gutter: stable;
   list-style: none;
 }
 .embedded-playlist li button {
@@ -776,7 +817,8 @@ button {
 .skin-metal .transport-controls { gap: 12px; }
 .skin-metal .transport-row .machine-button { width: 56px; height: 56px; }
 .skin-metal .play-button,
-.skin-metal .loop-button.is-active {
+.skin-metal .loop-button.is-active,
+.skin-metal .mini-submission-button {
   background: linear-gradient(135deg, #87df50, #4fc208 55%, #3b9106);
   border-color: #347e06;
   color: #fff;

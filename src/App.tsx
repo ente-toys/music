@@ -2,6 +2,7 @@ import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
+  type RefObject,
   useCallback,
   useEffect,
   useRef,
@@ -103,6 +104,7 @@ const visualizationIntervals = [
   [600, '10 minutes'],
   [0, 'Never'],
 ] as const;
+const submissionUrl = 'https://github.com/ente-toys/music#submit-your-song';
 const iconPaths = {
   close: 'M6 6l12 12M18 6 6 18',
   loop: 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-1v2a3 3 0 0 1-3 3H3',
@@ -141,11 +143,16 @@ function Icon({ name }: { name: keyof typeof iconPaths }) {
   );
 }
 
-function SubmissionButton() {
+function SubmissionButton({
+  anchorRef,
+}: {
+  anchorRef: RefObject<HTMLAnchorElement | null>;
+}) {
   return (
     <a
+      ref={anchorRef}
       className="submission-button"
-      href="https://github.com/ente-toys/music#submit-your-song"
+      href={submissionUrl}
       target="_blank"
       aria-label="Read how to submit your song"
       title="Submit your song"
@@ -240,6 +247,7 @@ export default function Home() {
   const playerRef = useRef<HTMLElement>(null);
   const playlistRef = useRef<HTMLOListElement>(null);
   const settingsRef = useRef<HTMLElement>(null);
+  const submissionRef = useRef<HTMLAnchorElement>(null);
   const presetsRef = useRef<Record<string, unknown>>({});
   const presetLoadedRef = useRef(false);
   const playingRef = useRef(false);
@@ -268,7 +276,17 @@ export default function Home() {
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
   const [minimizing, setMinimizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [submissionVisible, setSubmissionVisible] = useState<boolean>();
   const track = tracks[index];
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) =>
+      setSubmissionVisible(entry.intersectionRatio >= 0.5),
+      { threshold: 0.5 },
+    );
+    observer.observe(submissionRef.current!);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() =>
@@ -768,6 +786,9 @@ export default function Home() {
       <div className="scanlines" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
       <div className="visualizer-controls">
+        <span className="visualization-name" title={visualization}>
+          {visualization}
+        </span>
         <button
           type="button"
           aria-label={visualizerPaused ? 'Resume visualization' : 'Pause visualization'}
@@ -880,6 +901,15 @@ export default function Home() {
             >
               <Icon name="next" />
             </button>
+            <a
+              className="machine-button mini-submission-button"
+              href={submissionUrl}
+              target="_blank"
+              aria-label="Read how to submit your song"
+              title="Submit your song"
+            >
+              <Icon name="upload" />
+            </a>
             <button
               type="button"
               className="machine-button"
@@ -1015,7 +1045,7 @@ export default function Home() {
                   </li>
                 ))}
                 <li className="submission-item">
-                  <SubmissionButton />
+                  <SubmissionButton anchorRef={submissionRef} />
                 </li>
               </ol>
             </div>
@@ -1145,6 +1175,20 @@ export default function Home() {
           </section>
         </div>
       )}
+
+      <a
+        className={`submission-footer ${submissionVisible === false ? 'is-visible' : ''}`}
+        href={submissionUrl}
+        target="_blank"
+        aria-label="Read how to submit your song"
+        aria-hidden={submissionVisible !== false}
+        tabIndex={submissionVisible === false ? 0 : -1}
+        hidden={minimized}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <Icon name="upload" />
+        Submit your song
+      </a>
 
       <audio
         ref={audioARef}
