@@ -786,9 +786,6 @@ export default function Home() {
       <div className="scanlines" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
       <div className="visualizer-controls">
-        <span className="visualization-name" title={visualization}>
-          {visualization}
-        </span>
         <button
           type="button"
           aria-label={visualizerPaused ? 'Resume visualization' : 'Pause visualization'}
@@ -1177,13 +1174,12 @@ export default function Home() {
       )}
 
       <a
-        className={`submission-footer ${submissionVisible === false ? 'is-visible' : ''}`}
+        className={`submission-footer ${submissionVisible === false ? 'is-visible' : ''} ${minimized ? 'is-above-player' : ''}`}
         href={submissionUrl}
         target="_blank"
         aria-label="Read how to submit your song"
         aria-hidden={submissionVisible !== false}
         tabIndex={submissionVisible === false ? 0 : -1}
-        hidden={minimized}
         onClick={(event) => event.stopPropagation()}
       >
         <Icon name="upload" />

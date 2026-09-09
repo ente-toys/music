@@ -108,12 +108,6 @@ button {
 }
 .visualizer-controls:hover,
 .visualizer-controls:focus-within { opacity: 1; }
-.visualization-name {
-  max-width: min(280px, calc(100vw - 130px));
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .visualizer-controls button {
   width: 32px;
   height: 32px;
@@ -141,7 +135,10 @@ button {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 180ms ease, visibility 0s linear 180ms;
+  transition: bottom 220ms ease-out, opacity 180ms ease, visibility 0s linear 180ms;
+}
+.submission-footer.is-above-player {
+  bottom: calc(57px + max(14px, env(safe-area-inset-bottom)));
 }
 .submission-footer.is-visible {
   opacity: 0.55;
