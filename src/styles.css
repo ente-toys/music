@@ -592,6 +592,26 @@ button {
   color: #8f9b92;
   font-size: 10px;
 }
+.settings-section-heading small a {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+.settings-about {
+  display: grid;
+  gap: 10px;
+}
+.settings-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 4px;
+  color: #d3ff49;
+  font-size: 10px;
+  font-weight: 650;
+  text-underline-offset: 3px;
+}
+.settings-link .button-icon { width: 12px; height: 12px; }
+.settings-link:hover { color: #fff; }
 .setting-label {
   display: block;
   margin: 13px 0 6px;
@@ -931,6 +951,8 @@ button {
 .skin-metal .settings-section-heading strong { color: #000; }
 .skin-metal .settings-section-heading small,
 .skin-metal .setting-label { color: #56514b; }
+.skin-metal .settings-link { color: #398b07; }
+.skin-metal .settings-link:hover { color: #000; }
 .skin-metal .preset-select {
   height: 40px;
   border-color: #9b958f;

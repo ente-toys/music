@@ -1159,6 +1159,33 @@ export default function Home() {
                   </div>
                 </div>
               </section>
+
+              <section
+                className="settings-section settings-about"
+                aria-labelledby="about-setting"
+              >
+                <div className="settings-section-heading">
+                  <span>
+                    <strong id="about-setting">About</strong>
+                    <small>
+                      Music composed by people around{' '}
+                      <a href="https://ente.com" target="_blank" rel="noreferrer">
+                        Ente
+                      </a>
+                      .
+                    </small>
+                  </span>
+                </div>
+                <a
+                  className="settings-link"
+                  href="https://github.com/ente-toys/music"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View on GitHub
+                  <Icon name="restore" />
+                </a>
+              </section>
             </div>
           </section>
         </div>
