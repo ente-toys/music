@@ -298,14 +298,6 @@ button {
   color: #bac5bc;
   font-variant-numeric: tabular-nums;
 }
-.mini-submission-button {
-  display: inline-grid;
-  flex: none;
-  place-items: center;
-  border-color: #ff642e;
-  color: #ff7a45;
-  text-decoration: none;
-}
 .player-body {
   padding: 14px;
 }
@@ -814,8 +806,7 @@ button {
 .skin-metal .transport-controls { gap: 12px; }
 .skin-metal .transport-row .machine-button { width: 56px; height: 56px; }
 .skin-metal .play-button,
-.skin-metal .loop-button.is-active,
-.skin-metal .mini-submission-button {
+.skin-metal .loop-button.is-active {
   background: linear-gradient(135deg, #87df50, #4fc208 55%, #3b9106);
   border-color: #347e06;
   color: #fff;

@@ -898,15 +898,6 @@ export default function Home() {
             >
               <Icon name="next" />
             </button>
-            <a
-              className="machine-button mini-submission-button"
-              href={submissionUrl}
-              target="_blank"
-              aria-label="Read how to submit your song"
-              title="Submit your song"
-            >
-              <Icon name="upload" />
-            </a>
             <button
               type="button"
               className="machine-button"
