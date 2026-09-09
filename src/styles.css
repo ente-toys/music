@@ -192,21 +192,54 @@ button {
   width: 144px;
   height: 32px;
 }
+.skin-classic .player-wrap:not(.is-minimized) {
+  width: min(500px, calc(100vw - 20px));
+}
 .skin-classic .title-bar {
-  padding-left: 14px;
+  height: auto;
+  padding: 8px 8px 8px 10px;
 }
 .skin-classic .title-logo {
-  width: 100.8px;
-  height: 22.4px;
+  width: 90px;
+  height: 20px;
 }
+.skin-classic .window-button {
+  width: 24px;
+  height: 24px;
+}
+.skin-classic .window-button .button-icon { width: 13px; height: 13px; }
+.skin-classic .window-actions { margin-right: 2px; }
 .skin-classic .player-window:not(.is-minimized) {
   max-height: calc(100dvh - 20px);
   overflow: auto;
 }
-.skin-classic .player-window:not(.is-minimized) .embedded-playlist ol {
-  height: 233px;
+.skin-classic .player-body { padding: 10px; }
+.skin-classic .display {
+  grid-template-rows: 1fr 24px;
+  gap: 3px 8px;
+  min-height: 74px;
+  padding: 8px 9px 6px;
+}
+.skin-classic .track-number,
+.skin-classic .clock { font-size: 30px; }
+.skin-classic .track-title { font-size: 15px; }
+.skin-classic .track-artist { margin-top: 3px; font-size: 9px; }
+.skin-classic .meter { height: 24px; }
+.skin-classic .seek-row { height: 28px; }
+.skin-classic .transport-row { gap: 8px; }
+.skin-classic .transport-controls { gap: 4px; }
+.skin-classic .machine-button { min-width: 34px; min-height: 34px; }
+.skin-classic .play-button { min-width: 38px; min-height: 38px; }
+.skin-classic .embedded-playlist { margin-top: 7px; }
+.skin-classic .playlist-label { padding: 6px 7px; font-size: 8px; }
+.skin-classic .embedded-playlist ol {
+  height: 162px;
   overflow-y: auto;
 }
+.skin-classic .embedded-playlist li button { min-height: 38px; padding: 6px; }
+.skin-classic .embedded-playlist strong { font-size: 10px; }
+.skin-classic .embedded-playlist small { margin-top: 2px; font-size: 8px; }
+.skin-classic .embedded-playlist .submission-button { min-height: 36px; font-size: 10px; }
 .window-button {
   width: 32px;
   height: 28px;
@@ -927,9 +960,6 @@ button {
   }
   .player-body {
     padding: 10px;
-  }
-  .skin-classic .title-bar {
-    padding-left: 10px;
   }
   .display {
     min-height: 78px;

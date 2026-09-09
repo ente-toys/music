@@ -271,7 +271,7 @@ export default function Home() {
   const [elapsed, setElapsed] = useState(restoreTimeRef.current);
   const [duration, setDuration] = useState(restoreTimeRef.current);
   const [volume, setVolume] = useState(savedState.volume ?? 72);
-  const [skin, setSkin] = useState<Skin>(savedState.skin ?? 'classic');
+  const [skin, setSkin] = useState<Skin>(savedState.skin === 'metal' ? 'metal' : 'classic');
   const [looping, setLooping] = useState(savedState.looping ?? false);
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
   const [minimizing, setMinimizing] = useState(false);
@@ -825,7 +825,7 @@ export default function Home() {
             title="Drag to move · Double-click to center"
           >
             <img className="title-logo" src="/ente-music.svg" alt="Ente Music" draggable={false} />
-            {skin !== 'classic' && <span className="hardware-label">STEREO MUSIC PLAYER</span>}
+            {skin === 'metal' && <span className="hardware-label">STEREO MUSIC PLAYER</span>}
             <span className="window-actions">
               <button
                 type="button"
@@ -919,7 +919,7 @@ export default function Home() {
                 <p className="track-artist">{track.artist}</p>
               </div>
               <div className="clock">
-                {skin !== 'classic' ? <SegmentClock seconds={elapsed} /> : formatTime(elapsed)}
+                {skin === 'metal' ? <SegmentClock seconds={elapsed} /> : formatTime(elapsed)}
               </div>
               <div ref={meterRef} className="meter" aria-hidden="true">
                 {Array.from({ length: 18 }, (_, bar) => (
