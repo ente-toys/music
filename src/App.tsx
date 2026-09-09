@@ -239,6 +239,8 @@ export default function Home() {
     target: null as HTMLElement | null,
   });
   const meterRef = useRef<HTMLDivElement>(null);
+  const nativeAudioRef = useRef(false);
+  const pendingPlaybackRef = useRef<{ slot: 0 | 1; track?: number } | null>(null);
   const gainRefs = useRef<[GainNode | null, GainNode | null]>([null, null]);
   const initialVisualizationRef = useRef(
     savedState.visualization ?? defaultVisualization,
@@ -254,12 +256,14 @@ export default function Home() {
   const restoreTimeRef = useRef(Math.max(0, savedState.time ?? 0));
   const seekingRef = useRef(false);
   const transitionTimerRef = useRef(0);
+  const crossfadeTimerRef = useRef(0);
   const visualizerLoadingRef = useRef(false);
   const visualizerRef = useRef<MilkdropVisualizer>(null);
   const [index, setIndex] = useState(
     Math.min(tracks.length - 1, Math.max(0, savedState.track ?? 0)),
   );
   const [playing, setPlaying] = useState(false);
+  const [nativeAudio, setNativeAudio] = useState(false);
   const [visualizerReady, setVisualizerReady] = useState<boolean | null>(null);
   const [visualizations, setVisualizations] = useState([defaultVisualization]);
   const [visualization, setVisualization] = useState(
@@ -341,7 +345,47 @@ export default function Home() {
     visualizerPaused,
   ]);
 
+  const recoverAudio = useCallback(() => {
+    nativeAudioRef.current = true;
+    const audio = [audioARef.current!, audioBRef.current!];
+    const pending = pendingPlaybackRef.current;
+    const slot = pending?.slot ?? activeAudioRef.current;
+    const active = audio[slot];
+    const resume = pending !== null || !active.paused;
+    const sources = audio.map((element) => element.src);
+    const volume = active.volume;
+    restoreTimeRef.current = active.currentTime;
+    audio.forEach((element) => element.pause());
+    playingRef.current = false;
+    clearTimeout(transitionTimerRef.current);
+    transitionTimerRef.current = 0;
+    clearTimeout(crossfadeTimerRef.current);
+    crossfadingRef.current = false;
+    pendingPlaybackRef.current = null;
+    activeAudioRef.current = slot;
+    void contextRef.current!.close();
+    // A MediaElementAudioSourceNode cannot release its element for native output.
+    flushSync(() => {
+      setNativeAudio(true);
+      setVisualizerReady(false);
+      setPlaying(false);
+      if (pending?.track !== undefined) setIndex(pending.track);
+      setElapsed(active.currentTime);
+      setDuration(Number.isFinite(active.duration) ? active.duration : 0);
+    });
+    const replacement = [audioARef.current!, audioBRef.current!];
+    replacement.forEach((element, slot) => {
+      element.volume = volume;
+      element.src = sources[slot];
+    });
+    if (resume)
+      void replacement[activeAudioRef.current].play().catch((reason) =>
+        console.error('Native playback failed', reason),
+      );
+  }, []);
+
   const connectAudio = useCallback(async (resume = true) => {
+    if (nativeAudioRef.current) return;
     const audio = [audioARef.current, audioBRef.current];
     if (!audio[0] || !audio[1]) return;
     if (!contextRef.current) {
@@ -361,6 +405,7 @@ export default function Home() {
       analyser.connect(context.destination);
       analyserRef.current = analyser;
       contextRef.current = context;
+      context.addEventListener('error', recoverAudio, { once: true });
     }
     if (!visualizerRef.current && !visualizerLoadingRef.current) {
       visualizerLoadingRef.current = true;
@@ -372,6 +417,7 @@ export default function Home() {
         import('butterchurn-presets/lib/butterchurnPresetsMD1.min.js'),
       ])
         .then(([{ default: butterchurn }, ...presetPacks]) => {
+          if (nativeAudioRef.current) return;
           const visualizer = butterchurn.createVisualizer(
             contextRef.current!,
             canvasRef.current!,
@@ -412,7 +458,7 @@ export default function Home() {
     }
     if (resume && contextRef.current.state === 'suspended')
       await contextRef.current.resume();
-  }, []);
+  }, [recoverAudio]);
 
   useEffect(() => {
     const audio = audioARef.current!;
@@ -441,6 +487,10 @@ export default function Home() {
     if (visualizerReady === null) return;
     const analyser = analyserRef.current!;
     const bars = Array.from(meterRef.current!.children) as HTMLElement[];
+    if (nativeAudio) {
+      bars.forEach((bar) => (bar.style.height = '12%'));
+      return;
+    }
     const frequencies = new Uint8Array(analyser.frequencyBinCount);
     let frame = 0;
     const resize = () =>
@@ -471,7 +521,7 @@ export default function Home() {
       removeEventListener('resize', resize);
       cancelAnimationFrame(frame);
     };
-  }, [visualizerPaused, visualizerReady]);
+  }, [nativeAudio, visualizerPaused, visualizerReady]);
 
   useEffect(() => {
     if (!visualizerReady) return;
@@ -593,12 +643,17 @@ export default function Home() {
       ? audioBRef.current!
       : audioARef.current!;
     if (audio.paused) {
+      const pending = { slot: activeAudioRef.current };
+      pendingPlaybackRef.current = pending;
       try {
         await connectAudio();
+        if (audio !== (pending.slot ? audioBRef.current : audioARef.current)) return;
         await audio.play();
-        setPlaying(true);
       } catch (reason) {
+        if (audio !== (pending.slot ? audioBRef.current : audioARef.current)) return;
         console.error('Playback failed', reason);
+      } finally {
+        if (pendingPlaybackRef.current === pending) pendingPlaybackRef.current = null;
       }
     } else {
       clearTimeout(transitionTimerRef.current);
@@ -613,34 +668,42 @@ export default function Home() {
     clearTimeout(transitionTimerRef.current);
     transitionTimerRef.current = 0;
     crossfadingRef.current = true;
-    await connectAudio();
     const fromSlot = activeAudioRef.current;
     const toSlot = fromSlot ? 0 : 1;
     const audio = [audioARef.current!, audioBRef.current!];
     const from = audio[fromSlot];
     const to = audio[toSlot];
-    const context = contextRef.current!;
-    const fromGain = gainRefs.current[fromSlot]!;
-    const toGain = gainRefs.current[toSlot]!;
+    const context = nativeAudioRef.current ? null : contextRef.current!;
     const source = sourceFor(tracks[next]);
     if (to.getAttribute('src') !== source) to.src = source;
     to.currentTime = 0;
     to.volume = volume / 100;
+    pendingPlaybackRef.current = { slot: toSlot, track: next };
     try {
+      await connectAudio();
+      if (to !== (toSlot ? audioBRef.current : audioARef.current)) return;
       await to.play();
-      const now = context.currentTime;
-      fromGain.gain.cancelScheduledValues(now);
-      toGain.gain.cancelScheduledValues(now);
-      fromGain.gain.setValueAtTime(1, now);
-      toGain.gain.setValueAtTime(1, now);
-      fromGain.gain.linearRampToValueAtTime(0, now + crossfadeSeconds);
+      if (to !== (toSlot ? audioBRef.current : audioARef.current)) return;
+      pendingPlaybackRef.current = null;
+      if (context) {
+        const fromGain = gainRefs.current[fromSlot]!;
+        const toGain = gainRefs.current[toSlot]!;
+        const now = context.currentTime;
+        fromGain.gain.cancelScheduledValues(now);
+        toGain.gain.cancelScheduledValues(now);
+        fromGain.gain.setValueAtTime(1, now);
+        toGain.gain.setValueAtTime(1, now);
+        fromGain.gain.linearRampToValueAtTime(0, now + crossfadeSeconds);
+      } else {
+        from.pause();
+      }
       activeAudioRef.current = toSlot;
       setIndex(next);
       setElapsed(0);
       setDuration(Number.isFinite(to.duration) ? to.duration : 0);
       playingRef.current = true;
       setPlaying(true);
-      window.setTimeout(() => {
+      crossfadeTimerRef.current = window.setTimeout(() => {
         from.pause();
         from.currentTime = 0;
         const standbySource = sourceFor(
@@ -651,8 +714,10 @@ export default function Home() {
           from.load();
         }
         crossfadingRef.current = false;
-      }, crossfadeSeconds * 1000);
+      }, context ? crossfadeSeconds * 1000 : 0);
     } catch (reason) {
+      if (to !== (toSlot ? audioBRef.current : audioARef.current)) return;
+      pendingPlaybackRef.current = null;
       to.pause();
       crossfadingRef.current = false;
       console.error('Track transition failed', reason);
@@ -680,6 +745,7 @@ export default function Home() {
     const remaining = audio.duration - audio.currentTime;
     if (
       playingRef.current &&
+      !nativeAudioRef.current &&
       !audio.paused &&
       Number.isFinite(audio.duration) &&
       remaining <= 1 &&
@@ -1205,6 +1271,7 @@ export default function Home() {
       </a>
 
       <audio
+        key={`a-${nativeAudio}`}
         ref={audioARef}
         preload="metadata"
         onTimeUpdate={(event) => updateTime(0, event.currentTarget)}
@@ -1225,6 +1292,7 @@ export default function Home() {
         }}
       />
       <audio
+        key={`b-${nativeAudio}`}
         ref={audioBRef}
         preload="metadata"
         onTimeUpdate={(event) => updateTime(1, event.currentTarget)}
