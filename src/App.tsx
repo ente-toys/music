@@ -272,7 +272,7 @@ export default function Home() {
   const [duration, setDuration] = useState(restoreTimeRef.current);
   const [volume, setVolume] = useState(savedState.volume ?? 72);
   const [skin, setSkin] = useState<Skin>(savedState.skin ?? 'classic');
-  const [looping, setLooping] = useState(savedState.looping ?? true);
+  const [looping, setLooping] = useState(savedState.looping ?? false);
   const [minimized, setMinimized] = useState(savedState.minimized ?? false);
   const [minimizing, setMinimizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
