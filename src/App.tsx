@@ -15,6 +15,7 @@ type Track = { id: string; title: string; artist: string; url: string };
 const { tracks } = (await fetch('/player-tracks.json').then((response) =>
   response.json(),
 )) as { tracks: Track[] };
+const linkedTrackIndex = tracks.findIndex((track) => track.id === location.hash.slice(1));
 const crossfadeSeconds = 0.1;
 const featuredVisualizations = [
   'baked - mushroom rainbows[acid Storm]',
@@ -253,14 +254,16 @@ export default function Home() {
   const presetsRef = useRef<Record<string, unknown>>({});
   const presetLoadedRef = useRef(false);
   const playingRef = useRef(false);
-  const restoreTimeRef = useRef(Math.max(0, savedState.time ?? 0));
+  const restoreTimeRef = useRef(linkedTrackIndex >= 0 ? 0 : Math.max(0, savedState.time ?? 0));
   const seekingRef = useRef(false);
   const transitionTimerRef = useRef(0);
   const crossfadeTimerRef = useRef(0);
   const visualizerLoadingRef = useRef(false);
   const visualizerRef = useRef<MilkdropVisualizer>(null);
   const [index, setIndex] = useState(
-    Math.min(tracks.length - 1, Math.max(0, savedState.track ?? 0)),
+    linkedTrackIndex >= 0
+      ? linkedTrackIndex
+      : Math.min(tracks.length - 1, Math.max(0, savedState.track ?? 0)),
   );
   const [playing, setPlaying] = useState(false);
   const [nativeAudio, setNativeAudio] = useState(false);
@@ -646,12 +649,12 @@ export default function Home() {
       const pending = { slot: activeAudioRef.current };
       pendingPlaybackRef.current = pending;
       try {
-        await connectAudio();
-        if (audio !== (pending.slot ? audioBRef.current : audioARef.current)) return;
-        await audio.play();
+        await Promise.all([connectAudio(), audio.play()]);
       } catch (reason) {
         if (audio !== (pending.slot ? audioBRef.current : audioARef.current)) return;
-        console.error('Playback failed', reason);
+        audio.pause();
+        if (!(reason instanceof DOMException && reason.name === 'NotAllowedError'))
+          console.error('Playback failed', reason);
       } finally {
         if (pendingPlaybackRef.current === pending) pendingPlaybackRef.current = null;
       }
@@ -662,6 +665,10 @@ export default function Home() {
       setPlaying(false);
     }
   };
+
+  useEffect(() => {
+    if (linkedTrackIndex >= 0) void togglePlayback();
+  }, []);
 
   const crossfadeTo = async (next: number) => {
     if (crossfadingRef.current) return;
