@@ -15,7 +15,8 @@ type Track = { id: string; title: string; artist: string; url: string };
 const { tracks } = (await fetch('/player-tracks.json').then((response) =>
   response.json(),
 )) as { tracks: Track[] };
-const linkedTrackIndex = tracks.findIndex((track) => track.id === location.hash.slice(1));
+const trackPrefix = location.hash.slice(1);
+const linkedTrackIndex = tracks.findIndex((track) => trackPrefix && track.id.startsWith(trackPrefix));
 const crossfadeSeconds = 0.1;
 const featuredVisualizations = [
   'baked - mushroom rainbows[acid Storm]',
