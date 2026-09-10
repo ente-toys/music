@@ -35,6 +35,12 @@
       "title": "Sunday",
       "artist": "Vishnu",
       "url": "https://music.ente.com/tracks/sunday.mp3"
+    },
+    {
+      "id": "get-better-1789020809",
+      "title": "Get Better",
+      "artist": "Luke Iggy",
+      "url": "https://music.ente.com/tracks/get-better.mp3"
     }
   ]
 }
