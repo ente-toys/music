@@ -1,14 +1,17 @@
 import {
   type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
   useCallback,
   useEffect,
+  useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
-import { flushSync } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import type { Visualizer as MilkdropVisualizer } from 'butterchurn';
 
 type Track = { id: string; title: string; artist: string; url: string };
@@ -142,6 +145,227 @@ function Icon({ name }: { name: keyof typeof iconPaths }) {
     <svg className="button-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d={iconPaths[name]} />
     </svg>
+  );
+}
+
+function SettingsSelect({
+  id,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  const listId = useId();
+  const optionId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(() =>
+    Math.max(
+      0,
+      options.findIndex((option) => option.value === value),
+    ),
+  );
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>();
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const selectedLabel =
+    options.find((option) => option.value === value)?.label ?? value;
+  const skinClass =
+    rootRef.current
+      ?.closest('.music-shell')
+      ?.className.split(/\s+/)
+      .find((name) => name.startsWith('skin-')) ?? '';
+  const activeOptionId =
+    open && options[activeIndex] ? `${optionId}-${activeIndex}` : undefined;
+
+  const updateMenuPosition = useCallback(() => {
+    const button = buttonRef.current;
+    const dialog = button?.closest('#player-settings') as HTMLElement | null;
+    if (!button || !dialog) return;
+    const buttonRect = button.getBoundingClientRect();
+    const dialogRect = dialog.getBoundingClientRect();
+    const maxHeight = Math.min(
+      240,
+      Math.max(120, window.innerHeight - buttonRect.bottom - 12),
+    );
+    setMenuStyle({
+      top: buttonRect.bottom - dialogRect.top + dialog.scrollTop + 4,
+      left: buttonRect.left - dialogRect.left + dialog.scrollLeft,
+      width: buttonRect.width,
+      maxHeight,
+    });
+  }, []);
+
+  const close = useCallback((restoreFocus = true) => {
+    setOpen(false);
+    if (restoreFocus) buttonRef.current?.focus();
+  }, []);
+
+  const selectIndex = useCallback(
+    (index: number) => {
+      const option = options[index];
+      if (!option) return;
+      onChange(option.value);
+      setActiveIndex(index);
+      close();
+    },
+    [close, onChange, options],
+  );
+
+  const moveActive = useCallback(
+    (nextIndex: number) => {
+      const clamped = Math.max(0, Math.min(options.length - 1, nextIndex));
+      setActiveIndex(clamped);
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`${optionId}-${clamped}`)
+          ?.scrollIntoView({ block: 'nearest' });
+      });
+    },
+    [optionId, options.length],
+  );
+
+  const openMenu = useCallback(
+    (index = Math.max(0, options.findIndex((option) => option.value === value))) => {
+      setActiveIndex(index);
+      setPortalTarget(
+        (buttonRef.current?.closest('#player-settings') as HTMLElement | null) ??
+          null,
+      );
+      setOpen(true);
+    },
+    [options, value],
+  );
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updateMenuPosition();
+    listRef.current
+      ?.querySelector<HTMLElement>(`[aria-selected="true"]`)
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [open, updateMenuPosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const dialog = portalTarget;
+    dialog?.classList.add('has-open-select');
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target) || listRef.current?.contains(target))
+        return;
+      close(false);
+    };
+    const onReposition = () => updateMenuPosition();
+    document.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('resize', onReposition);
+    window.addEventListener('scroll', onReposition, true);
+    return () => {
+      dialog?.classList.remove('has-open-select');
+      document.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('resize', onReposition);
+      window.removeEventListener('scroll', onReposition, true);
+    };
+  }, [close, open, portalTarget, updateMenuPosition]);
+
+  const onButtonKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        if (open) moveActive(activeIndex + 1);
+        else openMenu();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        if (open) moveActive(activeIndex - 1);
+        else openMenu(options.length - 1);
+        break;
+      case 'Home':
+        if (!open) break;
+        event.preventDefault();
+        moveActive(0);
+        break;
+      case 'End':
+        if (!open) break;
+        event.preventDefault();
+        moveActive(options.length - 1);
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        if (open) selectIndex(activeIndex);
+        else openMenu();
+        break;
+      case 'Escape':
+        if (!open) break;
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+        break;
+      case 'Tab':
+        if (open) close(false);
+        break;
+      default:
+        break;
+    }
+  };
+
+  return (
+    <div className="preset-select-wrap" ref={rootRef}>
+      <button
+        ref={buttonRef}
+        id={id}
+        type="button"
+        role="combobox"
+        className="preset-select"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-activedescendant={open ? activeOptionId : undefined}
+        onClick={() => (open ? close() : openMenu())}
+        onKeyDown={onButtonKeyDown}
+      >
+        <span className="preset-select-value">{selectedLabel}</span>
+      </button>
+      {open &&
+        portalTarget &&
+        createPortal(
+          <ul
+            ref={listRef}
+            id={listId}
+            className={`preset-select-menu ${skinClass}`}
+            role="listbox"
+            tabIndex={-1}
+            aria-labelledby={id}
+            style={menuStyle}
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            {options.map((option, index) => {
+              const selected = option.value === value;
+              const active = index === activeIndex;
+              return (
+                <li
+                  key={option.value}
+                  id={`${optionId}-${index}`}
+                  role="option"
+                  className={`preset-select-option${active ? ' is-active' : ''}`}
+                  aria-selected={selected}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onClick={() => selectIndex(index)}
+                >
+                  {option.label}
+                </li>
+              );
+            })}
+          </ul>,
+          portalTarget,
+        )}
+    </div>
   );
 }
 
@@ -630,7 +854,7 @@ export default function Home() {
   const doubleTapVisualizer = (event: ReactPointerEvent<HTMLElement>) => {
     if (
       event.pointerType === 'mouse' ||
-      (event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls')
+      (event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls, .preset-select-menu')
     )
       return;
     const now = performance.now();
@@ -781,10 +1005,6 @@ export default function Home() {
     const onKeyDown = (event: KeyboardEvent) => {
       const target =
         event.target instanceof HTMLElement ? event.target : undefined;
-      if (event.code === 'Escape' && settingsOpen) {
-        setSettingsOpen(false);
-        return;
-      }
       if (event.code === 'Space') {
         if (
           target?.closest(
@@ -810,7 +1030,7 @@ export default function Home() {
       }
       if (
         target?.closest(
-          'button, input, textarea, [role="slider"], [role="combobox"]',
+          'button, input, textarea, [role="slider"], [role="combobox"], [role="listbox"], [role="option"]',
         )
       )
         return;
@@ -840,7 +1060,7 @@ export default function Home() {
       className={`music-shell skin-${skin} ${visualizerPaused ? 'visualizer-paused' : ''}`}
       onPointerUp={doubleTapVisualizer}
       onClick={(event) => {
-        if (!(event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls'))
+        if (!(event.target as Element).closest('.player-wrap, .settings-backdrop, .visualizer-controls, .preset-select-menu'))
           void minimizePlayer();
       }}
       onDoubleClick={(event) => {
@@ -850,7 +1070,7 @@ export default function Home() {
             performance.now() - lastVisualizerTapRef.current < 500
           ) &&
           !(event.target as Element).closest(
-            '.player-wrap, .settings-backdrop, .visualizer-controls',
+            '.player-wrap, .settings-backdrop, .visualizer-controls, .preset-select-menu',
           )
         )
           toggleFullscreen();
@@ -1116,10 +1336,7 @@ export default function Home() {
       </section>
 
       {settingsOpen && (
-        <div
-          className="settings-backdrop"
-          onClick={() => setSettingsOpen(false)}
-        >
+        <div className="settings-backdrop">
           <section
             ref={settingsRef}
             id="player-settings"
@@ -1127,7 +1344,6 @@ export default function Home() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="settings-title"
-            onClick={(event) => event.stopPropagation()}
           >
             <div
               className="settings-titlebar"
@@ -1162,18 +1378,12 @@ export default function Home() {
                 <label className="setting-label" htmlFor="skin-select">
                   Skin
                 </label>
-                <select
+                <SettingsSelect
                   id="skin-select"
-                  className="preset-select"
                   value={skin}
-                  onChange={(event) => setSkin(event.currentTarget.value as Skin)}
-                >
-                  {skins.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                  options={skins.map(({ value, label }) => ({ value, label }))}
+                  onChange={(next) => setSkin(next as Skin)}
+                />
               </section>
 
               <section
@@ -1191,20 +1401,15 @@ export default function Home() {
                     <label className="setting-label" htmlFor="preset-setting">
                       Preset · {visualizations.length} available
                     </label>
-                    <select
+                    <SettingsSelect
                       id="preset-setting"
-                      className="preset-select"
                       value={visualization}
-                      onChange={(event) =>
-                        setVisualization(event.currentTarget.value)
-                      }
-                    >
-                      {visualizations.map((preset) => (
-                        <option key={preset} value={preset}>
-                          {preset}
-                        </option>
-                      ))}
-                    </select>
+                      options={visualizations.map((preset) => ({
+                        value: preset,
+                        label: preset,
+                      }))}
+                      onChange={setVisualization}
+                    />
                   </div>
                   <div>
                     <label
@@ -1213,23 +1418,17 @@ export default function Home() {
                     >
                       Auto-change interval
                     </label>
-                    <select
+                    <SettingsSelect
                       id="interval-setting"
-                      className="preset-select"
-                      value={visualizationInterval}
-                      onChange={(event) => {
-                        const interval = Number(
-                          event.currentTarget.value,
-                        ) as VisualizationInterval;
-                        setVisualizationInterval(interval);
-                      }}
-                    >
-                      {visualizationIntervals.map(([seconds, label]) => (
-                        <option key={seconds} value={seconds}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
+                      value={String(visualizationInterval)}
+                      options={visualizationIntervals.map(([seconds, label]) => ({
+                        value: String(seconds),
+                        label,
+                      }))}
+                      onChange={(next) =>
+                        setVisualizationInterval(Number(next) as VisualizationInterval)
+                      }
+                    />
                   </div>
                 </div>
               </section>
