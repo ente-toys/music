@@ -625,11 +625,16 @@ button {
   grid-template-columns: minmax(0, 1fr) 170px;
   gap: 10px;
 }
+.preset-select-wrap {
+  position: relative;
+  width: 100%;
+}
 .preset-select {
+  display: flex;
   width: 100%;
   height: 36px;
+  align-items: center;
   padding: 0 38px 0 14px;
-  appearance: none;
   border: 1px solid #536158;
   border-radius: 0;
   background-color: #131a15;
@@ -637,14 +642,76 @@ button {
   background-repeat: no-repeat;
   background-position: right 14px center;
   color: #d3ff49;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
+  text-align: left;
   cursor: pointer;
 }
-.preset-select option {
+.preset-select:focus-visible {
+  outline: 2px solid #d3ff49;
+  outline-offset: 2px;
+}
+.preset-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.preset-select-menu {
+  position: absolute;
+  z-index: 40;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid #536158;
   background: #151c17;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.55);
+  list-style: none;
+  padding: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #536158 #101712;
+}
+.settings-modal.has-open-select {
+  overflow: visible;
+}
+.preset-select-menu::-webkit-scrollbar {
+  width: 8px;
+}
+.preset-select-menu::-webkit-scrollbar-track {
+  background: #101712;
+}
+.preset-select-menu::-webkit-scrollbar-thumb {
+  background: #536158;
+  border: 2px solid #101712;
+  border-radius: 0;
+}
+.preset-select-menu::-webkit-scrollbar-thumb:hover {
+  background: #6a7a6c;
+}
+.preset-select-option {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
   color: #e8f1e4;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.preset-select-option:hover,
+.preset-select-option.is-active {
+  background: #243028;
+  color: #d3ff49;
+}
+.preset-select-option[aria-selected='true'] {
+  background: #2d3d32;
+  color: #d3ff49;
+}
+.preset-select-option[aria-selected='true'].is-active {
+  background: #374a3d;
 }
 .playlist-label {
   display: flex;
@@ -944,8 +1011,7 @@ button {
 .skin-metal .machine-button:active,
 .skin-metal .window-button:active { transform: translateY(2px); box-shadow: inset 0 1px 3px #0006, 0 1px 1px #111; }
 .skin-metal button:focus-visible,
-.skin-metal input:focus-visible,
-.skin-metal select:focus-visible { outline: 2px solid #398b07; outline-offset: 4px; }
+.skin-metal input:focus-visible { outline: 2px solid #398b07; outline-offset: 4px; }
 .skin-metal .settings-titlebar { height: 48px; background: transparent; color: #000; border-color: #aaa5a0; }
 .skin-metal .settings-section { border-color: #aba6a0; background: #ffffff26; }
 .skin-metal .settings-section-heading strong { color: #000; }
@@ -962,7 +1028,38 @@ button {
   color: #292929;
   box-shadow: inset 0 1px #fff, 0 2px 2px #0002;
 }
-.skin-metal .preset-select option { background: #efede9; color: #292929; }
+.preset-select-menu.skin-metal {
+  border-color: #9b958f;
+  border-radius: 3px;
+  background: #efede9;
+  box-shadow: 0 8px 24px #0003;
+  scrollbar-color: #9b958f #e2dfd8;
+}
+.preset-select-menu.skin-metal::-webkit-scrollbar-track {
+  background: #e2dfd8;
+}
+.preset-select-menu.skin-metal::-webkit-scrollbar-thumb {
+  background: #9b958f;
+  border-color: #e2dfd8;
+}
+.preset-select-menu.skin-metal::-webkit-scrollbar-thumb:hover {
+  background: #7f7a74;
+}
+.preset-select-menu.skin-metal .preset-select-option {
+  color: #292929;
+}
+.preset-select-menu.skin-metal .preset-select-option:hover,
+.preset-select-menu.skin-metal .preset-select-option.is-active {
+  background: #e2dfd8;
+  color: #111;
+}
+.preset-select-menu.skin-metal .preset-select-option[aria-selected='true'] {
+  background: #d8d4cb;
+  color: #111;
+}
+.preset-select-menu.skin-metal .preset-select-option[aria-selected='true'].is-active {
+  background: #cdc8be;
+}
 .skin-metal .mini-track,
 .skin-metal .mini-track span,
 .skin-metal .mini-seek { color: #393633; }
