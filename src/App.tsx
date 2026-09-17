@@ -164,6 +164,7 @@ function SettingsSelect({
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const searchRef = useRef({ text: '', time: 0 });
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() =>
     Math.max(
@@ -189,20 +190,25 @@ function SettingsSelect({
     if (!button || !dialog) return;
     const buttonRect = button.getBoundingClientRect();
     const dialogRect = dialog.getBoundingClientRect();
-    const maxHeight = Math.min(
-      240,
-      Math.max(120, window.innerHeight - buttonRect.bottom - 12),
-    );
+    const below = window.innerHeight - buttonRect.bottom - 12;
+    const above = buttonRect.top - 12;
+    const opensBelow = below >= 120 || below >= above;
     setMenuStyle({
-      top: buttonRect.bottom - dialogRect.top + dialog.scrollTop + 4,
-      left: buttonRect.left - dialogRect.left + dialog.scrollLeft,
+      top: opensBelow
+        ? buttonRect.bottom - dialogRect.top - dialog.clientTop + 4
+        : undefined,
+      bottom: opensBelow
+        ? undefined
+        : dialogRect.bottom - buttonRect.top - dialog.clientTop + 4,
+      left: buttonRect.left - dialogRect.left - dialog.clientLeft,
       width: buttonRect.width,
-      maxHeight,
+      maxHeight: Math.max(0, Math.min(240, opensBelow ? below : above)),
     });
   }, []);
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false);
+    searchRef.current.text = '';
     if (restoreFocus) buttonRef.current?.focus();
   }, []);
 
@@ -245,15 +251,16 @@ function SettingsSelect({
   useLayoutEffect(() => {
     if (!open) return;
     updateMenuPosition();
-    listRef.current
-      ?.querySelector<HTMLElement>(`[aria-selected="true"]`)
-      ?.scrollIntoView({ block: 'nearest' });
+    const frame = requestAnimationFrame(() => {
+      listRef.current
+        ?.querySelector<HTMLElement>('.is-active')
+        ?.scrollIntoView({ block: 'nearest' });
+    });
+    return () => cancelAnimationFrame(frame);
   }, [open, updateMenuPosition]);
 
   useEffect(() => {
     if (!open) return;
-    const dialog = portalTarget;
-    dialog?.classList.add('has-open-select');
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (rootRef.current?.contains(target) || listRef.current?.contains(target))
@@ -265,14 +272,43 @@ function SettingsSelect({
     window.addEventListener('resize', onReposition);
     window.addEventListener('scroll', onReposition, true);
     return () => {
-      dialog?.classList.remove('has-open-select');
       document.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('resize', onReposition);
       window.removeEventListener('scroll', onReposition, true);
     };
-  }, [close, open, portalTarget, updateMenuPosition]);
+  }, [close, open, updateMenuPosition]);
 
   const onButtonKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    const search = searchRef.current;
+    const now = performance.now();
+    if (now - search.time > 700) search.text = '';
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey &&
+      (event.key !== ' ' || search.text)
+    ) {
+      event.preventDefault();
+      search.text += event.key.toLowerCase();
+      search.time = now;
+      const query = [...search.text].every((char) => char === search.text[0])
+        ? search.text[0]
+        : search.text;
+      const current = open
+        ? activeIndex
+        : options.findIndex((option) => option.value === value);
+      const start = current + (query.length === 1 ? 1 : 0);
+      for (let offset = 0; offset < options.length; offset++) {
+        const index = (start + offset + options.length) % options.length;
+        if (!options[index].label.toLowerCase().startsWith(query)) continue;
+        if (open) moveActive(index);
+        else openMenu(index);
+        break;
+      }
+      return;
+    }
+    search.text = '';
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
@@ -339,10 +375,10 @@ function SettingsSelect({
             id={listId}
             className={`preset-select-menu ${skinClass}`}
             role="listbox"
-            tabIndex={-1}
             aria-labelledby={id}
             style={menuStyle}
             onClick={(event) => event.stopPropagation()}
+            onMouseDown={(event) => event.preventDefault()}
             onPointerDown={(event) => event.stopPropagation()}
           >
             {options.map((option, index) => {
@@ -1005,6 +1041,10 @@ export default function Home() {
     const onKeyDown = (event: KeyboardEvent) => {
       const target =
         event.target instanceof HTMLElement ? event.target : undefined;
+      if (event.code === 'Escape' && settingsOpen) {
+        setSettingsOpen(false);
+        return;
+      }
       if (event.code === 'Space') {
         if (
           target?.closest(
